@@ -1,0 +1,10 @@
+.wrap {
+  list-style: none;
+}
+
+.auth {
+  width: 100%;
+  flex-direction: row;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}

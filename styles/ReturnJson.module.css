@@ -1,0 +1,25 @@
+.wrap {
+  width: 100%;
+}
+
+.liBox {
+  background-color: black;
+  width: 100%;
+  max-width: 100%;
+}
+
+.li {
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+  padding-left: 20px;
+  list-style: none;
+  font-family: "notoSans";
+}
+
+.title {
+  font-family: "notoSansB";
+  margin-bottom: 10px;
+  color: rgb(166, 166, 166);
+}

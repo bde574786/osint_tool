@@ -1,0 +1,27 @@
+.wrap {
+  border-radius: 10px;
+  border: 1px solid #fff;
+  width: fit-content;
+  padding: 12px 20px;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+  box-sizing: border-box;
+  height: 100%;
+}
+
+.title {
+  font-family: "duneRise";
+  font-size: 16px;
+  height: 100%;
+}
+
+.sub {
+  height: 20%;
+  font-family: "duneRise";
+  font-size: 14px;
+  width: 100%;
+  color: gray;
+  font-family: "notoSans";
+}
