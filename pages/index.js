@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
-import Image from "next/image";
-
 import styles from "@/styles/Home.module.css";
 import ResultBox from "@/components/resultBox";
 import Contents from "@/components/contents";
 import Map from "@/components/map";
 import ReturnJson from "@/components/returnJson";
 import AnalysisResult from "@/components/AnalysisResult";
+import BodyAnalysisResult from "@/components/bodyAnalysisResult";
 
 export default function Home() {
-  const connect = "http://218.38.27.216:3000";
+  // const connect = "http://218.38.27.216:3000";
+  const connect = "";
 
   // ****** 외부 API 연동
   const [ipInfo, setIpInfo] = useState([]);
@@ -17,20 +17,23 @@ export default function Home() {
   const [vtIpRelInfo, setVtIpRelInfo] = useState([]);
   const [vtDomainRelInfo, setVtDomainRelInfo] = useState([]);
   const [vtUrlRelInfo, setVtUrlRelInfo] = useState([]);
-  const [GPTResult, setGPTResult] = useState("");
+  const [GPTResult, setGPTResult] = useState([]);
 
   const [ipAddr, setIpAddr] = useState([]);
   const [hostName, setHostName] = useState([]);
-
   const [paths, setPaths] = useState([]);
 
   // 이메일 내용 세팅 및 결과 리턴
   const [emailData, setEmailData] = useState("");
   const [analysisResult, setAnalysisResult] = useState("");
+  const [bodyAnalysisResult, setbodyAnalysisResult] = useState("");
   const [extractedEmailBody, setExtractedEmailBody] = useState([]);
   const [bodyUrls, setBodyUrls] = useState([]);
 
   const [isLoadingGPTResult, setIsLoadingGPTResult] = useState(false);
+  const [detectionStatus, setDetectionStatus] = useState("none");
+  const [bodyDetectionStatus, setBodyDetectionStatus] = useState("none");
+  const [analysisStarted, setAnalysisStarted] = useState(false);
 
   useEffect(() => {
     // IP 정보 GET API (/api/ip2loc_ip)
@@ -96,8 +99,8 @@ export default function Home() {
         .then((response) => response.json())
         .then((result) => {
           if (!result.error && !result.error_code) {
-            setVtDomainRelInfo((prevVtUrlRelInfo) => [
-              ...prevVtUrlRelInfo,
+            setVtDomainRelInfo((prevVtDomainRelInfo) => [
+              ...prevVtDomainRelInfo,
               { hn, data: result },
             ]);
           }
@@ -113,8 +116,8 @@ export default function Home() {
         .then((response) => response.json())
         .then((result) => {
           if (!result.error && !result.error_code) {
-            setVtUrlRelInfo((prevVtDomainRelInfo) => [
-              ...prevVtDomainRelInfo,
+            setVtUrlRelInfo((prevVtUrlRelInfo) => [
+              ...prevVtUrlRelInfo,
               { url, data: result },
             ]);
           }
@@ -124,32 +127,72 @@ export default function Home() {
   }, [bodyUrls]);
 
   useEffect(() => {
-    (async () => {
-      if (extractedEmailBody && !GPTResult) {
-        setIsLoadingGPTResult(true); // Start loading
+    const fetchGPTResult = async () => {
+      if (extractedEmailBody) {
+        // `extractedEmailBody`가 있을 때만 API 호출
+        setIsLoadingGPTResult(true); // 로딩 시작
         try {
-          const res = await fetch(`${connect}/api/gpt4`, {
+          const response = await fetch(`${connect}/api/gpt4Risk`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({ content: extractedEmailBody }),
           });
+          const data = await response.json();
 
-          const data = await res.json();
-
-          if (data.choices && data.choices.length > 0) {
-            const res_content = data.choices[0].message.content;
-            setGPTResult(res_content);
-          }
+          setGPTResult(data); // 결과 설정
+          console.log(GPTResult);
         } catch (error) {
           console.error("ChatGPT API request failed:", error);
         } finally {
-          setIsLoadingGPTResult(false); // End loading
+          setIsLoadingGPTResult(false); // 로딩 종료
         }
       }
-    })();
+    };
+
+    fetchGPTResult(); // API 호출 함수 실행
   }, [extractedEmailBody]);
+
+  useEffect(() => {
+    const allInfo = [...vtIpRelInfo, ...vtDomainRelInfo];
+    if (analysisStarted) {
+      const detected = allInfo.some((info) => info.data && info.data.detected);
+      setDetectionStatus(detected ? "fail" : "pass");
+    }
+  }, [vtIpRelInfo, vtDomainRelInfo, analysisStarted]);
+
+  useEffect(() => {
+    if (analysisStarted) {
+      const detected = vtUrlRelInfo.some(
+        (info) => info.data && info.data.detected
+      );
+      setBodyDetectionStatus(detected ? "fail" : "pass");
+    }
+  }, [vtUrlRelInfo, analysisStarted]);
+
+  useEffect(() => {
+    console.log(GPTResult); // 상태가 업데이트될 때마다 실행됩니다.
+  }, [GPTResult]);
+
+  const renderGPTResultAsList = (gptResult) => {
+    const reasonsPart = gptResult.spamAnalysis.split("이유:");
+    const items = reasonsPart[1].split(/\d+\./).slice(1);
+
+    console.log(reasonsPart);
+    console.log(items);
+
+    return (
+      <ul>
+        <li>{reasonsPart[0]}</li>
+        <li>{gptResult.labelAnalysis}</li>
+        <br />
+        {items.map((item, index) => (
+          <li key={index}>- {item.trim()}</li>
+        ))}
+      </ul>
+    );
+  };
 
   /////////////////////////////////////////////////////
 
@@ -159,7 +202,7 @@ export default function Home() {
   };
 
   // 이메일 파싱 API 구현 및 연동
-  const analyzeEmailHeader = () => {
+  const analyzeEmailHeader = async () => {
     console.log("분석 시작");
 
     // 상태 초기화
@@ -171,48 +214,51 @@ export default function Home() {
     setIpAddr([]);
     setHostName([]);
     setAnalysisResult("");
+    setbodyAnalysisResult("");
     setExtractedEmailBody("");
     setEmailData("");
     setBodyUrls([]);
-    setGPTResult("");
+    setGPTResult([]);
 
-    // 이메일 헤더 파싱 API
-    fetch(`${connect}/api/analyzeEmailHeader`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ emailData }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("분석 결과:", data);
-        setAnalysisResult(data);
-        setIpAddr(data.ipAddresses || []);
-        setHostName(data.hostNames || []);
-      })
-      .catch((error) => {
-        console.error("분석 중 에러 발생:", error);
-        setAnalysisResult("분석 중 에러 발생");
-      });
+    setDetectionStatus("none");
+    setBodyDetectionStatus("none");
 
-    // 이메일 본문 파싱 API
-    fetch(`${connect}/api/analyzeEmailBody`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ rawEmailData: emailData }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Extracted email body:", data);
-        setExtractedEmailBody(data.body);
-        setBodyUrls(data.links);
-      })
-      .catch((error) => {
-        console.error("Error extracting email body:", error);
+    setAnalysisStarted(true);
+
+    try {
+      // 이메일 헤더 파싱 API
+      const headerResponse = await fetch(`${connect}/api/analyzeEmailHeader`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ emailData }),
       });
+      const headerData = await headerResponse.json();
+
+      console.log("분석 결과:", headerData);
+      setAnalysisResult(headerData);
+      setIpAddr(headerData.ipAddresses || []);
+      setHostName(headerData.hostNames || []);
+
+      // 이메일 본문 파싱 API 호출
+      const bodyResponse = await fetch(`${connect}/api/analyzeEmailBody`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ rawEmailData: emailData }),
+      });
+      const bodyData = await bodyResponse.json();
+
+      console.log("Extracted email body:", bodyData);
+      setbodyAnalysisResult(bodyData);
+      setExtractedEmailBody(bodyData.body);
+      setBodyUrls(bodyData.links);
+    } catch (error) {
+      console.error("분석 중 에러 발생:", error);
+      setAnalysisResult("분석 중 에러 발생");
+    }
   };
 
   /////////////////////////////////////////////////////
@@ -225,24 +271,55 @@ export default function Home() {
           </div>
         </div>
         <div className={`${styles.inputMailWrap} flex`}>
-          <textarea value={emailData} onChange={handleEmailDataChange} />
+          <textarea
+            placeholder="'메일 -> 더보기 -> 원문 보기' 메일 데이터 복사 붙여넣기"
+            value={emailData}
+            onChange={handleEmailDataChange}
+          />
         </div>
         <div className={`${styles.submitBtnWrap} flex`}>
           <button
             onClick={analyzeEmailHeader}
             disabled={!emailData.trim().length}
           >
-            ANALYSIS
+            ANALYZE
           </button>
         </div>
       </div>
       <div className={`${styles.outputWrap} flex`}>
         <div className={`${styles.outputBoxWrap} flex`}>
+          <Contents
+            header={"SUMMARY"}
+            contents={
+              <div className={`${styles.resultArea} flex`}>
+                <ResultBox v={"header"} status={detectionStatus} />
+                <ResultBox v={"contents"} status={bodyDetectionStatus} />
+              </div>
+            }
+          />
           <Contents header={"IP MAP"} contents={<Map paths={paths} />} />
           <Contents
-            header={"AUTHENTICATION"}
+            header={"Header Analysis"}
             contents={<AnalysisResult result={analysisResult} />}
           />
+          <Contents
+            header={"Body Analysis"}
+            contents={<BodyAnalysisResult result={bodyAnalysisResult} />}
+          />
+
+          <Contents
+            header={"Text Analysis - GPT4"}
+            contents={
+              isLoadingGPTResult ? (
+                <div>Loading...</div>
+              ) : GPTResult.spamAnalysis ? (
+                renderGPTResultAsList(GPTResult)
+              ) : (
+                <div>No Result</div>
+              )
+            }
+          />
+
           {ipInfo.map(
             (info, index) =>
               info.data && (
@@ -265,49 +342,36 @@ export default function Home() {
                 />
               )
           )}
-          {vtIpRelInfo.map(
-            (info, index) =>
-              info.data && (
-                <Contents
-                  key={index}
-                  header={`VirusTotal - IP`}
-                  sub={`${info.ip}`}
-                  contents={<ReturnJson data={info.data} />}
-                />
-              )
-          )}
-          {vtDomainRelInfo.map(
-            (info, index) =>
-              info.data && (
-                <Contents
-                  key={index}
-                  header={`VirusTotal - Domain`}
-                  sub={`${info.hn}`}
-                  contents={<ReturnJson data={info.data} />}
-                />
-              )
-          )}
-          {vtUrlRelInfo.map(
-            (info, index) =>
-              info.data && (
-                <Contents
-                  key={index}
-                  header={`VirusTotal - URL`}
-                  sub={`${info.url}`}
-                  contents={<ReturnJson data={info.data} />}
-                />
-              )
-          )}
-          {extractedEmailBody && (
-            <Contents header={"Body Analysis"} contents={extractedEmailBody} />
-          )}
-          {isLoadingGPTResult ? (
-            <div className={`${styles.loadingIcon}`}>Loading...</div>
-          ) : (
-            GPTResult && (
-              <Contents header={"Text Analysis - GPT4"} contents={GPTResult} />
-            )
-          )}
+
+          {vtIpRelInfo.map((info, index) => (
+            <Contents
+              bg={info.data && info.data.detected ? "#bb0000" : undefined}
+              key={index}
+              header={`VirusTotal - IP`}
+              sub={`${info.ip}`}
+              contents={<ReturnJson data={info.data} />}
+            />
+          ))}
+
+          {vtDomainRelInfo.map((info, index) => (
+            <Contents
+              bg={info.data && info.data.detected ? "#bb0000" : undefined}
+              key={index}
+              header={`VirusTotal - Domain`}
+              sub={`${info.hn}`}
+              contents={<ReturnJson data={info.data} />}
+            />
+          ))}
+
+          {vtUrlRelInfo.map((info, index) => (
+            <Contents
+              bg={info.data && info.data.detected ? "#bb0000" : undefined}
+              key={index}
+              header={`VirusTotal - URL`}
+              sub={`${info.url}`}
+              contents={<ReturnJson data={info.data} />}
+            />
+          ))}
         </div>
       </div>
     </div>

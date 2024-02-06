@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
   try {
-    const apiKey = "2AC117C86538B4E8E84CE5D0AE36FB75";
+    const apiKey = process.env.NEXT_PUBLIC_API_IPLOC;
     const domainAddress = req.query.domain;
     //https://api.ip2whois.com/v2?key=2AC117C86538B4E8E84CE5D0AE36FB75&domain=ip242.ip-15-204-49.us
     const apiUrl = `https://api.ip2whois.com/v2?key=${apiKey}&domain=${domainAddress}`;

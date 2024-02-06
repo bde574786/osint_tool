@@ -7,10 +7,10 @@ const ResultBox = ({ v, status }) => {
   switch (v) {
     case "header":
     default:
-      result = "헤더 분석";
+      result = "Header Analysis";
       break;
     case "contents":
-      result = "본문 분석";
+      result = "Body Analysis";
       break;
   }
 
@@ -23,7 +23,7 @@ const ResultBox = ({ v, status }) => {
       break;
     case "none":
     default:
-      borderColor = backgroundColor = textColor = "rgba(124, 124, 124, 0.8)";
+      borderColor = backgroundColor = textColor = "rgba(69, 69, 69, 0.8)";
       break;
   }
 

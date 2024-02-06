@@ -13,13 +13,11 @@
   overflow-wrap: break-word;
   word-break: break-word;
   max-width: 100%;
-  padding-left: 20px;
   list-style: none;
-  font-family: "notoSans";
+  margin-bottom: 10px;
 }
 
 .title {
-  font-family: "notoSansB";
-  margin-bottom: 10px;
-  color: rgb(166, 166, 166);
+  margin-bottom: 20px;
+  color: rgb(171, 171, 171);
 }
