@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
   try {
-    const apiKey = "2AC117C86538B4E8E84CE5D0AE36FB75";
+    const apiKey = process.env.NEXT_PUBLIC_API_IPLOC;
     const ipAddress = req.query.ip;
     const apiUrl = `https://api.ip2location.io/?key=${apiKey}&ip=${ipAddress}`;
 

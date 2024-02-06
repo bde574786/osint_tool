@@ -8,3 +8,24 @@
   justify-content: space-between;
   flex-wrap: wrap;
 }
+
+.title {
+  color: #9b9b9b;
+  margin-top: 20px;
+  margin-bottom: 4px;
+}
+
+.list {
+  margin-bottom: 10px;
+}
+
+.number {
+  color: #9b9b9b;
+}
+
+.li {
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}

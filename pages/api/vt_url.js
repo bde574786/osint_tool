@@ -3,8 +3,7 @@ export default async function handler(req, res) {
   // POST로 URL에 대한 리포트 생성 -> GET으로 해당 리포트 문서 접근 -> detected 카테고리가 Undetected 또는 Harmless가 아닌 경우만 렌더링
   const url = req.query.url;
 
-  const apiKey =
-    "958a61d824f8ca6909d4ab686289c2aa6575effe217a73d6a5afc24810c11b63";
+  const apiKey = process.env.NEXT_PUBLIC_API_VT;
 
   async function submitUrlForAnalysis(url) {
     const submitResponse = await fetch(
@@ -46,11 +45,16 @@ export default async function handler(req, res) {
     }
 
     const analysisData = await analysisResponse.json();
+
+    // 감지된 데이터가 있는지 여부를 나타내는 플래그
+    let detected = false;
+
     const filteredResults = Object.entries(
       analysisData.data.attributes.results
     ).reduce((acc, [engine, result]) => {
       if (result.category !== "undetected" && result.category !== "harmless") {
         acc[engine] = result;
+        detected = true;
       }
       return acc;
     }, {});
@@ -64,6 +68,7 @@ export default async function handler(req, res) {
           results: filteredResults,
         },
       },
+      detected: detected,
     };
   }
 
