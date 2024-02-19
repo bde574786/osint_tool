@@ -6,6 +6,7 @@ import Map from "@/components/map";
 import ReturnJson from "@/components/returnJson";
 import AnalysisResult from "@/components/AnalysisResult";
 import BodyAnalysisResult from "@/components/bodyAnalysisResult";
+import Scanner from "@/components/scanner";
 
 export default function Home() {
   // const connect = "http://218.38.27.216:3000";
@@ -34,6 +35,15 @@ export default function Home() {
   const [detectionStatus, setDetectionStatus] = useState("none");
   const [bodyDetectionStatus, setBodyDetectionStatus] = useState("none");
   const [analysisStarted, setAnalysisStarted] = useState(false);
+
+  // 탭 상태 추가
+  const [isAnalysisComplete, setIsAnalysisComplete] = useState(false);
+  const [activeTab, setActiveTab] = useState("info");
+
+  // 탭 변경 핸들러
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
 
   useEffect(() => {
     // IP 정보 GET API (/api/ip2loc_ip)
@@ -240,6 +250,7 @@ export default function Home() {
       setAnalysisResult(headerData);
       setIpAddr(headerData.ipAddresses || []);
       setHostName(headerData.hostNames || []);
+      setIsAnalysisComplete(true);
 
       // 이메일 본문 파싱 API 호출
       const bodyResponse = await fetch(`${connect}/api/analyzeEmailBody`, {
@@ -287,92 +298,105 @@ export default function Home() {
         </div>
       </div>
       <div className={`${styles.outputWrap} flex`}>
-        <div className={`${styles.outputBoxWrap} flex`}>
-          <Contents
-            header={"SUMMARY"}
-            contents={
-              <div className={`${styles.resultArea} flex`}>
-                <ResultBox v={"header"} status={detectionStatus} />
-                <ResultBox v={"contents"} status={bodyDetectionStatus} />
-              </div>
-            }
-          />
-          <Contents header={"IP MAP"} contents={<Map paths={paths} />} />
-          <Contents
-            header={"Header Analysis"}
-            contents={<AnalysisResult result={analysisResult} />}
-          />
-          <Contents
-            header={"Body Analysis"}
-            contents={<BodyAnalysisResult result={bodyAnalysisResult} />}
-          />
-
-          <Contents
-            header={"Text Analysis - GPT4"}
-            contents={
-              isLoadingGPTResult ? (
-                <div>Loading...</div>
-              ) : GPTResult.spamAnalysis ? (
-                renderGPTResultAsList(GPTResult)
-              ) : (
-                <div>No Result</div>
-              )
-            }
-          />
-
-          {ipInfo.map(
-            (info, index) =>
-              info.data && (
-                <Contents
-                  key={index}
-                  header={`IP2LOC - IP`}
-                  sub={`${info.ip}`}
-                  contents={<ReturnJson data={info.data} />}
-                />
-              )
+        <div className={`${styles.tabWrap} flex`}>
+          <button onClick={() => handleTabChange("info")}>Information</button>
+          {isAnalysisComplete && (
+            <button onClick={() => handleTabChange("scanner")}>Scanner</button>
           )}
-          {hostNameInfo.map(
-            (info, index) =>
-              info.data && (
-                <Contents
-                  key={index}
-                  header={`IP2LOC - DOMAIN`}
-                  sub={`${info.hn}`}
-                  contents={<ReturnJson data={info.data} />}
-                />
-              )
-          )}
-
-          {vtIpRelInfo.map((info, index) => (
-            <Contents
-              bg={info.data && info.data.detected ? "#bb0000" : undefined}
-              key={index}
-              header={`VirusTotal - IP`}
-              sub={`${info.ip}`}
-              contents={<ReturnJson data={info.data} />}
-            />
-          ))}
-
-          {vtDomainRelInfo.map((info, index) => (
-            <Contents
-              bg={info.data && info.data.detected ? "#bb0000" : undefined}
-              key={index}
-              header={`VirusTotal - Domain`}
-              sub={`${info.hn}`}
-              contents={<ReturnJson data={info.data} />}
-            />
-          ))}
-
-          {vtUrlRelInfo.map((info, index) => (
-            <Contents
-              bg={info.data && info.data.detected ? "#bb0000" : undefined}
-              key={index}
-              header={`VirusTotal - URL`}
-              sub={`${info.url}`}
-              contents={<ReturnJson data={info.data} />}
-            />
-          ))}
         </div>
+        {activeTab === "info" && (
+          <div className={`${styles.outputBoxWrap} flex`}>
+            <Contents
+              header={"SUMMARY"}
+              contents={
+                <div className={`${styles.resultArea} flex`}>
+                  <ResultBox v={"header"} status={detectionStatus} />
+                  <ResultBox v={"contents"} status={bodyDetectionStatus} />
+                </div>
+              }
+            />
+            <Contents header={"IP MAP"} contents={<Map paths={paths} />} />
+            <Contents
+              header={"Header Analysis"}
+              contents={<AnalysisResult result={analysisResult} />}
+            />
+            <Contents
+              header={"Body Analysis"}
+              contents={<BodyAnalysisResult result={bodyAnalysisResult} />}
+            />
+
+            <Contents
+              header={"Text Analysis - GPT4"}
+              contents={
+                isLoadingGPTResult ? (
+                  <div>Loading...</div>
+                ) : GPTResult.spamAnalysis ? (
+                  renderGPTResultAsList(GPTResult)
+                ) : (
+                  <div>No Result</div>
+                )
+              }
+            />
+
+            {ipInfo.map(
+              (info, index) =>
+                info.data && (
+                  <Contents
+                    key={index}
+                    header={`IP2LOC - IP`}
+                    sub={`${info.ip}`}
+                    contents={<ReturnJson data={info.data} />}
+                  />
+                )
+            )}
+            {hostNameInfo.map(
+              (info, index) =>
+                info.data && (
+                  <Contents
+                    key={index}
+                    header={`IP2LOC - DOMAIN`}
+                    sub={`${info.hn}`}
+                    contents={<ReturnJson data={info.data} />}
+                  />
+                )
+            )}
+
+            {vtIpRelInfo.map((info, index) => (
+              <Contents
+                bg={info.data && info.data.detected ? "#bb0000" : undefined}
+                key={index}
+                header={`VirusTotal - IP`}
+                sub={`${info.ip}`}
+                contents={<ReturnJson data={info.data} />}
+              />
+            ))}
+
+            {vtDomainRelInfo.map((info, index) => (
+              <Contents
+                bg={info.data && info.data.detected ? "#bb0000" : undefined}
+                key={index}
+                header={`VirusTotal - Domain`}
+                sub={`${info.hn}`}
+                contents={<ReturnJson data={info.data} />}
+              />
+            ))}
+
+            {vtUrlRelInfo.map((info, index) => (
+              <Contents
+                bg={info.data && info.data.detected ? "#bb0000" : undefined}
+                key={index}
+                header={`VirusTotal - URL`}
+                sub={`${info.url}`}
+                contents={<ReturnJson data={info.data} />}
+              />
+            ))}
+          </div>
+        )}
+        {activeTab === "scanner" && (
+          <div className={styles.scannerWrap}>
+            <Scanner initialIps={ipAddr} />
+          </div>
+        )}
       </div>
     </div>
   );

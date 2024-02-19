@@ -27,6 +27,32 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
   align-items: flex-start;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.tabWrap {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 0 40px;
+  margin-top: 20px;
+}
+
+.tabWrap button {
+  background: none;
+  border: 1px solid white;
+  margin: 0;
+  padding: 10px 20px;
+  margin-right: 20px;
+  color: white;
+  font-weight: bold;
+}
+
+.tabWrap button:hover {
+  background: rgb(20, 63, 255);
+  transition: background-color 0.3s;
 }
 
 /* 좌측 InputWrap 영역 */
@@ -88,6 +114,7 @@
 }
 .inputWrap .submitBtnWrap button:hover {
   background: rgb(20, 63, 255);
+  transition: background-color 0.3s;
 }
 
 /* 우측 OutputWrap 영역 */
@@ -103,4 +130,10 @@
 .outputWrap .outputBoxWrap .resultArea {
   width: 100%;
   justify-content: space-around;
+}
+
+.scannerWrap {
+  width: 100%;
+  height: auto;
+  min-height: 100%;
 }
