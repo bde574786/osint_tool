@@ -18,7 +18,7 @@ const ResultBox = ({ v, status }) => {
     case "pass":
       borderColor = backgroundColor = textColor = "rgba(3, 199, 90, 0.8)";
       break;
-    case "fail":
+    case "detected":
       borderColor = backgroundColor = textColor = "rgba(255, 59, 48, 0.8)";
       break;
     case "none":
