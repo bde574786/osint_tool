@@ -36,8 +36,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 0 40px;
-  margin-top: 20px;
+  margin: 20px 0;
 }
 
 .tabWrap button {
@@ -119,7 +118,7 @@
 
 /* 우측 OutputWrap 영역 */
 .outputWrap .outputBoxWrap {
-  padding: 40px;
+  padding: 0;
   width: 100%;
   height: auto;
   color: white;

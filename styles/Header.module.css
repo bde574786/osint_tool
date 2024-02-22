@@ -13,7 +13,7 @@
 .title {
   font-family: "kt";
   font-size: 16px;
-  height: 100%;
+  line-height: 100%;
   color: white;
 }
 
@@ -23,5 +23,4 @@
   width: 100%;
   color: rgb(179, 179, 179);
   font-family: "kt";
-  margin-top: 4px;
 }

@@ -6,7 +6,7 @@ import Map from "@/components/map";
 import ReturnJson from "@/components/returnJson";
 import AnalysisResult from "@/components/AnalysisResult";
 import BodyAnalysisResult from "@/components/bodyAnalysisResult";
-import Scanner from "@/components/scanner";
+import Scanner from "@/components/Scanner";
 
 export default function Home() {
   // const connect = "http://218.38.27.216:3000";
@@ -168,7 +168,7 @@ export default function Home() {
     const allInfo = [...vtIpRelInfo, ...vtDomainRelInfo];
     if (analysisStarted) {
       const detected = allInfo.some((info) => info.data && info.data.detected);
-      setDetectionStatus(detected ? "fail" : "pass");
+      setDetectionStatus(detected ? "detected" : "pass");
     }
   }, [vtIpRelInfo, vtDomainRelInfo, analysisStarted]);
 
@@ -177,7 +177,7 @@ export default function Home() {
       const detected = vtUrlRelInfo.some(
         (info) => info.data && info.data.detected
       );
-      setBodyDetectionStatus(detected ? "fail" : "pass");
+      setBodyDetectionStatus(detected ? "detected" : "pass");
     }
   }, [vtUrlRelInfo, analysisStarted]);
 

@@ -119,7 +119,7 @@ const analyzeEmailHeader = (emailData) => {
 
       // Received 경로에서 IP 주소 추출
       const ipMatch = line.match(ipRegex);
-      if (ipMatch) {
+      if (ipMatch && ipMatch[0] !== '127.0.0.1' && ipMatch[0] !== '0.0.0.0') {
         ipAddresses.push(ipMatch[0]);
       }
 
